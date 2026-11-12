@@ -1,0 +1,28 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {randomBytes} from 'node:crypto';
+import {createStore} from '../store.js';
+import {createAccounts} from '../accounts.js';
+import {createVault} from '../security.js';
+import {createGmail,encodeMessage} from '../gmail.js';
+const input=(email='user@example.com')=>({name:'New User',email,password:'Long secure passphrase!',role:'Developer'});
+
+test('registration hashes passwords, first account is manager, subsequent roles restricted',async()=>{
+ const s=createStore(':memory:');try{const a=createAccounts(s.db),u=await a.register(input());assert.equal(u.role,'Manager');assert.equal(u.verified,0);assert.equal(u.email,'user@example.com');const raw=s.db.prepare('SELECT * FROM accounts').get();assert.notEqual(raw.password_hash,input().password);assert.equal(raw.password_hash.includes(input().password),false);assert.equal('password_hash' in u,false);const second=await a.register(input('second@example.com'));assert.equal(second.role,'Developer');await assert.rejects(a.register({...input('bad@example.com'),role:'Manager'}),/role/);await assert.rejects(a.register(input('USER@example.com')),/already exists/);assert.equal(s.db.prepare('SELECT count(*) count FROM accounts').get().count,2)}finally{s.db.close()}
+});
+test('password validation, login, expiring sessions and logout',async()=>{
+ const s=createStore(':memory:');try{const a=createAccounts(s.db);await assert.rejects(a.register({...input(),password:'short'}),/12/);await assert.rejects(a.register(input('bad-email')),/email/);const u=await a.register(input());await assert.rejects(a.login({...input(),password:'wrong'}),/Incorrect/);assert.equal((await a.login(input())).id,u.id);const session=a.session(u.id);assert.equal(a.current(session).id,u.id);assert.notEqual(s.db.prepare('SELECT hash FROM sessions').get().hash,session);a.logout(session);assert.equal(a.current(session),null);const expired=a.session(u.id);s.db.exec('UPDATE sessions SET expires=0');assert.equal(a.current(expired),null)}finally{s.db.close()}
+});
+test('verification tokens are hashed, single-use and expiring; resend replaces prior token',async()=>{
+ const s=createStore(':memory:');try{const a=createAccounts(s.db),u=await a.register(input()),old=a.verification(u.id),fresh=a.verification(u.id);assert.throws(()=>a.verify(old),/invalid/);assert.notEqual(s.db.prepare('SELECT hash FROM verification_tokens').get().hash,fresh);assert.equal(a.verify(fresh).verified,1);assert.throws(()=>a.verify(fresh),/invalid/);const expired=a.verification(u.id);s.db.exec('UPDATE verification_tokens SET expires=0');assert.throws(()=>a.verify(expired),/expired/)}finally{s.db.close()}
+});
+test('Google accounts use subject identity and do not silently link password accounts',async()=>{
+ const s=createStore(':memory:');try{const a=createAccounts(s.db);await a.register(input());assert.throws(()=>a.google({sub:'s1',email:'user@example.com',email_verified:true}),/password account/);assert.throws(()=>a.google({sub:'s2',email:'new@example.com',email_verified:false}),/verified/);const u=a.google({sub:'s2',email:'new@example.com',email_verified:true,name:'Google User'});assert.equal(u.verified,1);assert.equal(u.google_connected,1);assert.equal(a.google({sub:'s2',email:'new@example.com',email_verified:true}).id,u.id)}finally{s.db.close()}
+});
+test('OAuth state requires matching browser cookie and is single-use',()=>{const s=createStore(':memory:');try{const a=createAccounts(s.db),flow=a.flow('login');assert.throws(()=>a.consumeFlow(flow.state,'bad'),/invalid/);assert.equal(a.consumeFlow(flow.state,flow.state).nonce,flow.nonce);assert.throws(()=>a.consumeFlow(flow.state,flow.state),/expired/)}finally{s.db.close()}});
+test('Gmail queue encrypts tokens and content, sends MIME, and records successful delivery',async()=>{
+ const s=createStore(':memory:');try{const vault=createVault(randomBytes(32).toString('base64'));const calls=[];const mail=createGmail(s.db,{clientId:'id',clientSecret:'secret'},vault,async(url,options)=>{calls.push({url,options});return {ok:true,json:async()=>({access_token:'access'})}});mail.queue('person@example.com','Subject','Private body');await mail.flush();assert.equal(calls.length,0);mail.connect('sender@gmail.com','refresh-secret');assert.notEqual(s.db.prepare('SELECT refresh_token FROM gmail_connection').get().refresh_token,'refresh-secret');assert.notEqual(s.db.prepare('SELECT body FROM mail_outbox').get().body,'Private body');await mail.flush();assert.equal(calls.length,2);assert.equal(calls[1].options.headers.Authorization,'Bearer access');const raw=JSON.parse(calls[1].options.body).raw;const mime=Buffer.from(raw,'base64url').toString();assert.match(mime,/To: person@example.com/);assert.ok(mime.includes(Buffer.from('Private body').toString('base64')));assert.equal(s.db.prepare('SELECT status FROM mail_outbox').get().status,'sent');mail.disconnect();assert.equal(mail.status().connected,false);assert.throws(()=>encodeMessage('bad\r\nBcc: other@example.com','Subject','Body'),/email/)}finally{s.db.close()}
+});
+test('Gmail delivery failure retains the queued email for retry',async()=>{
+ const s=createStore(':memory:');try{const mail=createGmail(s.db,{clientId:'id',clientSecret:'secret'},createVault(randomBytes(32).toString('base64')),async url=>({ok:url.includes('/token'),json:async()=>({access_token:'x'})}));mail.connect('sender@gmail.com','refresh');mail.queue('person@example.com','Subject','Body');await mail.flush();const queued=s.db.prepare('SELECT * FROM mail_outbox').get();assert.equal(queued.status,'pending');assert.equal(queued.attempts,1);assert.ok(queued.next_attempt>Date.now())}finally{s.db.close()}
+});
