@@ -10,7 +10,7 @@ services:
       HOST: 0.0.0.0
       PORT: "3000"
       BUGFLOW_DB: /data/bugflow.db
-      APP_ORIGIN: ${APP_ORIGIN}
+      APP_ORIGIN: ${APP_ORIGIN:-bugflow.devworxsd.com}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
