@@ -10,6 +10,9 @@ async function api(path, body) {
         }
       : {},
   );
+  if(response.status===404&&path.startsWith('auth/'))throw Error('The running server does not have the account service. Restart BugFlow with npm run dev (or rebuild and restart its Docker container), then refresh this page.');
+  const type=response.headers.get('content-type')||'';
+  if(!type.includes('application/json'))throw Error('BugFlow could not reach its account API. Open the application through its Node.js server, not a standalone preview.');
   const result = await response.json();
   if (!response.ok) throw Error(result.error);
   return result;
@@ -58,6 +61,7 @@ export function AccountGate({ children }) {
         <p>Opening your workspace…</p>
       </div>
     );
+  if(!session)return <div className="auth-shell"><div className="auth-card"><Brand/><h1>Account service unavailable</h1><p role="alert" className="error">{error||'The account service could not be reached.'}</p><button onClick={()=>{setLoading(true);refresh();}}>Try again</button></div></div>;
   if (session?.user?.verified)
     return children(session.user, logout, (user) =>
       setSession({ ...session, user }),
@@ -108,9 +112,9 @@ export function AccountGate({ children }) {
             <>
               <h2>Set up workspace email</h2>
               <p>
-                You’re the first registered user and workspace manager. Connect
-                a Gmail sender to deliver queued verification emails. Connecting
-                the same Google email also verifies this account.
+                You’re the first registered user and workspace manager. Configure
+                a Gmail sender on the server using an email address and Google
+                App Password, or connect through Google. Then resend verification.
               </p>
               <GmailSettings user={session.user} />
             </>
@@ -327,18 +331,18 @@ export function GmailSettings({ user }) {
       </div>
       {state && !state.configured && (
         <p className="auth-hint">
-          Google app credentials are not configured. Follow GOOGLE_SETUP.md on
-          the server, then restart the application.
+          Set the sender email and Google App Password on the server using
+          GMAIL_EMAIL and GMAIL_APP_PASSWORD, then restart the application.
         </p>
       )}
       {user.role === "Manager" && (
         <div className="toolbar">
-          <button
+          {state?.transport!=='smtp'&&<button
             disabled={busy || !state?.configured}
             onClick={() => action("connect")}
           >
             {state?.connected ? "Reconnect Gmail" : "Connect Gmail"}
-          </button>
+          </button>}
           {state?.connected && (
             <>
               <button
@@ -348,17 +352,18 @@ export function GmailSettings({ user }) {
               >
                 Send me a test email
               </button>
-              <button
+              {state?.transport!=='smtp'&&<button
                 className="secondary"
                 disabled={busy}
                 onClick={() => action("disconnect")}
               >
                 Disconnect
-              </button>
+              </button>}
             </>
           )}
         </div>
       )}
+      {state?.transport==='smtp'&&<p className="auth-hint">Gmail SMTP uses credentials stored on the server. No Google OAuth connection is needed to send email. The configured status does not guarantee delivery; check the queue or send a test after verifying your account.</p>}
       {state?.queue?.length > 0 && (
         <p className="auth-hint">
           Delivery queue:{" "}

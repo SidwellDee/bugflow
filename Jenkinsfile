@@ -20,6 +20,8 @@ pipeline {
         IMAGE_REPOSITORY        = "bugflow"
         COMPOSE_PROJECT_NAME    = "bugflow"
         APP_ORIGIN              = "https://bugflow.devworxsd.com"
+        GMAIL_EMAIL             = "testdevemail327@gmail.com"
+        GMAIL_APP_PASSWORD      = "kbil aqvm bqes hzdi "
     }
     stages {
         stage('Checkout') {

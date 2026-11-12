@@ -2,6 +2,8 @@
 
 BugFlow now supports password registration, verified email, Google sign-in and Gmail notifications. These features use your own Google Cloud OAuth application. No Google credentials are bundled, and no real email has been sent during automated testing.
 
+For email/password-based Gmail SMTP sending instead, follow SMTP_SETUP.md. Google OAuth setup below is only needed for Google sign-in or the OAuth Gmail sender option. SMTP takes priority when GMAIL_EMAIL and GMAIL_APP_PASSWORD are set on the server.
+
 ## Configure the Google application
 
 1. Create or select a project in the [Google Cloud console](https://console.cloud.google.com/).

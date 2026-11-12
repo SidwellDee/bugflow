@@ -5,7 +5,7 @@ import {createGmail} from './gmail.js';
 import {createVault} from './security.js';
 
 export function createApplication(store, config, dependencies={}) {
- const accounts=createAccounts(store.db), gmail=createGmail(store.db,config,dependencies.vault||createVault(config.encryptionKey),dependencies.fetcher);
+ const accounts=createAccounts(store.db), gmail=createGmail(store.db,config,dependencies.vault||createVault(config.encryptionKey),dependencies.fetcher,dependencies.smtpTransport);
  const google=dependencies.google||new OAuth2Client(config.clientId);
  const fetcher=dependencies.fetcher||fetch;
  const secure=config.origin.startsWith('https:');
@@ -29,7 +29,7 @@ export function createApplication(store, config, dependencies={}) {
     let raw='';for await(const chunk of req){raw+=chunk;if(Buffer.byteLength(raw)>100000){const e=Error('Request too large');e.status=413;throw e}}d=JSON.parse(raw);
    }
    const session=u=>{res.setHeader('Set-Cookie',cookie('bugflow_session',accounts.session(u.id),604800));return u};
-   if(req.method==='GET'&&path==='/api/auth/me')return send({user,googleConfigured:!!(config.clientId&&config.clientSecret)});
+   if(req.method==='GET'&&path==='/api/auth/me')return send({user,apiVersion:1,googleConfigured:!!(config.clientId&&config.clientSecret)});
    if(req.method==='POST'&&path==='/api/auth/register'){rate(req,'register',5);const u=await accounts.register(d);verifyMail(u);return send({user:session(u),message:'Account created. Verify your email before entering the workspace.',mailConnected:gmail.status().connected},201)}
    if(req.method==='POST'&&path==='/api/auth/login'){rate(req,'login');return send({user:session(await accounts.login(d))})}
    if(req.method==='POST'&&path==='/api/auth/logout'){accounts.logout(cookies(req).bugflow_session);res.setHeader('Set-Cookie',cookie('bugflow_session','',0));return send({ok:true})}
@@ -56,8 +56,8 @@ export function createApplication(store, config, dependencies={}) {
    if(req.method==='GET'&&path==='/api/mail/status')return send(gmail.status());
    if(path.startsWith('/api/mail/')&&req.method==='POST'){
     if(user.role!=='Manager'){const e=Error('Manager access required');e.status=403;throw e}
-    if(path==='/api/mail/connect')return send({url:authorize('gmail',req,res,user)});
-    if(path==='/api/mail/disconnect'){gmail.disconnect();return send({ok:true})}
+    if(path==='/api/mail/connect'){if(gmail.status().transport==='smtp')throw Error('Gmail SMTP is configured on the server. No Google connection is needed for email delivery.');return send({url:authorize('gmail',req,res,user)})}
+    if(path==='/api/mail/disconnect'){if(gmail.status().transport==='smtp')throw Error('Remove the Gmail SMTP credentials on the server and restart to disconnect.');gmail.disconnect();return send({ok:true})}
     if(path==='/api/mail/test'){if(!user.verified)throw Error('Verify your email first');if(!gmail.status().connected)throw Error('Connect Gmail first');rate(req,'test',5);gmail.queue(user.email,'BugFlow Gmail connection test','Your BugFlow workspace can send email through Gmail.');void deliver();return send({message:'Test email queued to your registered address.'})}
    }
    if(!user.verified){const e=Error('Verify your email before entering the workspace');e.status=403;throw e}

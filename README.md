@@ -43,6 +43,8 @@ The dashboard groups tickets by status. Drag a card to a highlighted destination
 
 ## Accounts and Gmail
 
+For Gmail sending with an email address and Google App Password, use [SMTP_SETUP.md](SMTP_SETUP.md). Set GMAIL_EMAIL and GMAIL_APP_PASSWORD in the private server environment file; Google OAuth credentials are optional for sending in this mode. Restart the server after configuration changes. The application checks account API availability before showing registration, and development mode watches backend imports to prevent stale-server mismatches.
+
 - `accounts.js`: password accounts, Google identities, sessions and verification tokens.
 - `application.js`: authenticated API, OAuth callbacks, team roles and notification triggers.
 - `gmail.js`: Gmail API delivery and persistent encrypted email queue.
@@ -51,4 +53,6 @@ The dashboard groups tickets by status. Drag a card to a highlighted destination
 - `.env.example`: configuration template; copy to private `.env`.
 
 Run `npm test` for all 28 automated checks. Google responses are mocked in tests. Real Google consent and live email delivery require the configuration and acceptance walkthrough in GOOGLE_SETUP.md.
+
+The current suite has 30 tests, including SMTP delivery and failure handling with a mocked transport. After `npm run build`, run `npm run test:http` for a real HTTP registration → verification → login check with a disposable database and no real email sending. That test requires local socket access.
 

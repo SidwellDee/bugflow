@@ -18,3 +18,5 @@ Start.ps1
 Jenkinsfile
 compose.yaml
 **/secretFiles/**
+
+update-backup-*/

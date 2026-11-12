@@ -9,7 +9,7 @@ const origin=process.env.APP_ORIGIN||`http://127.0.0.1:${process.env.PORT||3000}
 const parsedOrigin=new URL(origin);
 if(parsedOrigin.origin!==origin||!['http:','https:'].includes(parsedOrigin.protocol))throw Error('APP_ORIGIN must be an origin without a trailing slash');
 const store = createStore(process.env.BUGFLOW_DB || "bugflow.db");
-const application=createApplication(store,{origin,clientId:process.env.GOOGLE_CLIENT_ID,clientSecret:process.env.GOOGLE_CLIENT_SECRET,encryptionKey:process.env.TOKEN_ENCRYPTION_KEY});
+const application=createApplication(store,{origin,clientId:process.env.GOOGLE_CLIENT_ID,clientSecret:process.env.GOOGLE_CLIENT_SECRET,encryptionKey:process.env.TOKEN_ENCRYPTION_KEY,smtpUser:process.env.GMAIL_EMAIL,smtpPassword:process.env.GMAIL_APP_PASSWORD});
 const production = process.argv.includes("--production");
 const vite = production
   ? null
