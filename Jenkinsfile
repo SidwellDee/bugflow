@@ -1,6 +1,13 @@
 pipeline {
     // A trusted Linux agent with Docker Engine and Docker Compose v2.
-    agent { label 'docker' }
+    //agent { label 'docker' }
+    tools {
+        dockerTool 'docker-cli'
+    }
+    triggers {
+        // Allows GitHub Webhook to trigger this pipeline
+        githubPush()
+    }
     options {
         disableConcurrentBuilds()
         timestamps()
@@ -13,8 +20,12 @@ pipeline {
     }
     environment {
         // Use one Jenkins deployment job per Compose project/data volume.
-        IMAGE_REPOSITORY = 'bugflow'
-        COMPOSE_PROJECT_NAME = 'bugflow'
+        IMAGE_REPOSITORY        = "bugflow"
+        COMPOSE_PROJECT_NAME    = "bugflow"
+        APP_ORIGIN              = "bugflow.devworxsd.com"
+        GOOGLE_CLIENT_ID        =
+        GOOGLE_CLIENT_SECRET    =
+        TOKEN_ENCRYPTION_KEY    =
     }
     stages {
         stage('Checkout') {
