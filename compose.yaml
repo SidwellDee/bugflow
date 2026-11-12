@@ -15,7 +15,9 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
     ports:
-      - 8083:3000
+      - target: 3000
+        published: 8083
+        mode: host
     volumes:
       - bugflow-data:/data
     security_opt:
