@@ -22,7 +22,7 @@ pipeline {
         // Use one Jenkins deployment job per Compose project/data volume.
         IMAGE_REPOSITORY        = "bugflow"
         COMPOSE_PROJECT_NAME    = "bugflow"
-        APP_ORIGIN              = "bugflow.devworxsd.com"
+        APP_ORIGIN              = "https://bugflow.devworxsd.com"
     }
     stages {
         stage('Checkout') {
