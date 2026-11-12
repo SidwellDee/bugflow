@@ -6,15 +6,16 @@ services:
       target: runtime
     init: true
     restart: unless-stopped
-    env_file:
-      - ${BUGFLOW_ENV_FILE:-.env}
     environment:
       HOST: 0.0.0.0
       PORT: "3000"
       BUGFLOW_DB: /data/bugflow.db
-      APP_ORIGIN: ${APP_ORIGIN:?Set APP_ORIGIN in the environment file}
+      APP_ORIGIN: ${APP_ORIGIN}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      TOKEN_ENCRYPTION_KEY: ${TOKEN_ENCRYPTION_KEY}
     ports:
-      - "${BUGFLOW_BIND_IP:-127.0.0.1}:${BUGFLOW_HTTP_PORT:-3000}:3000"
+      - 8083:3000
     volumes:
       - bugflow-data:/data
     security_opt:
