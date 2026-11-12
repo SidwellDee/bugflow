@@ -82,7 +82,7 @@ pipeline {
                     '''
                 }*/
                 script {
-                    sh "docker compose -p bugflow -f compose.yaml up -d --force-recreate"
+                    sh "docker compose -p bugflow -f compose.yaml up -d --build --force-recreate"
                 }
             }
         }
