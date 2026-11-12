@@ -23,9 +23,6 @@ pipeline {
         IMAGE_REPOSITORY        = "bugflow"
         COMPOSE_PROJECT_NAME    = "bugflow"
         APP_ORIGIN              = "bugflow.devworxsd.com"
-        GOOGLE_CLIENT_ID        =
-        GOOGLE_CLIENT_SECRET    =
-        TOKEN_ENCRYPTION_KEY    =
     }
     stages {
         stage('Checkout') {
