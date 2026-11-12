@@ -1,6 +1,6 @@
 pipeline {
     // A trusted Linux agent with Docker Engine and Docker Compose v2.
-    agent { label 'docker' }
+    agent any
     tools {
         dockerTool 'docker-cli'
     }
