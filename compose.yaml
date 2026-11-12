@@ -1,6 +1,6 @@
 services:
   app:
-    image: ${BUGFLOW_IMAGE:-bugflow:local}
+    image: ${BUGFLOW_IMAGE:-bugflow/web:latest}
     build:
       context: .
       target: runtime
