@@ -3,8 +3,10 @@ import {createHash} from 'node:crypto';
 import {createAccounts} from './accounts.js';
 import {createGmail} from './gmail.js';
 import {createVault} from './security.js';
+import {createProjects} from './projects.js';
 
 export function createApplication(store, config, dependencies={}) {
+ const projects=createProjects(store);
  const accounts=createAccounts(store.db), gmail=createGmail(store.db,config,dependencies.vault||createVault(config.encryptionKey),dependencies.fetcher,dependencies.smtpTransport);
  const google=dependencies.google||new OAuth2Client(config.clientId);
  const fetcher=dependencies.fetcher||fetch;
@@ -18,7 +20,7 @@ export function createApplication(store, config, dependencies={}) {
  function authorize(purpose,req,res,user){if(!config.clientId||!config.clientSecret)throw Error('Google is not configured. Follow GOOGLE_SETUP.md.');const flow=accounts.flow(purpose,user?.id);res.setHeader('Set-Cookie',cookie('bugflow_oauth',flow.state,600));const params=new URLSearchParams({client_id:config.clientId,redirect_uri:config.origin+'/api/auth/google/callback',response_type:'code',scope:'openid email profile'+(purpose==='gmail'?' https://www.googleapis.com/auth/gmail.send':''),state:flow.state,nonce:flow.nonce,code_challenge:createHash('sha256').update(flow.verifier).digest('base64url'),code_challenge_method:'S256',...(purpose==='gmail'?{access_type:'offline',prompt:'consent'}:{})});return 'https://accounts.google.com/o/oauth2/v2/auth?'+params}
  const current=req=>accounts.current(cookies(req).bugflow_session);
  const timer=setInterval(()=>void deliver(),60000);timer.unref();
- return {accounts,gmail,close:()=>clearInterval(timer),async handle(req,res,url,send){
+ return {accounts,gmail,projects,close:()=>clearInterval(timer),async handle(req,res,url,send){
   if(!url.pathname.startsWith('/api/'))return false;
   const path=url.pathname,user=current(req);
   try{
@@ -61,19 +63,21 @@ export function createApplication(store, config, dependencies={}) {
     if(path==='/api/mail/test'){if(!user.verified)throw Error('Verify your email first');if(!gmail.status().connected)throw Error('Connect Gmail first');rate(req,'test',5);gmail.queue(user.email,'BugFlow Gmail connection test','Your BugFlow workspace can send email through Gmail.');void deliver();return send({message:'Test email queued to your registered address.'})}
    }
    if(!user.verified){const e=Error('Verify your email before entering the workspace');e.status=403;throw e}
-   if(req.method==='GET'&&path==='/api/data')return send(store.data());
+   if(req.method==='GET'&&path==='/api/data')return send(projects.data(user));
+   if(req.method==='POST'&&path==='/api/projects/members')return send(projects.updateMembers(d,user));
    if(req.method==='GET'&&path==='/api/team')return send({users:accounts.list().map(u=>({...u,email:user.role==='Manager'||u.id===user.id?u.email:undefined})),me:user});
    if(req.method==='POST'&&path==='/api/team/role'){if(user.role!=='Manager'){const e=Error('Manager access required');e.status=403;throw e}accounts.role(Number(d.id),d.role,user.id);return send({ok:true})}
    if(req.method==='POST'&&path==='/api/team/preferences')return send({user:accounts.preference(user.id,d.notifications)});
-   if(req.method==='GET'&&path==='/api/export'){const rows=store.export(),cell=v=>'"'+String(v??'').replace(/^[=+@-]/,"'$&").replaceAll('"','""')+'"';res.setHeader('Content-Disposition','attachment; filename="bugflow-all-projects.csv"');return send(rows.length?[Object.keys(rows[0]).map(cell).join(','),...rows.map(r=>Object.values(r).map(cell).join(','))].join('\r\n'):'',200,'text/csv')}
+   if(req.method==='GET'&&path==='/api/export'){const rows=projects.export(user,url.searchParams.get('project_id')),cell=v=>'"'+String(v??'').replace(/^[=+@-]/,"'$&").replaceAll('"','""')+'"';res.setHeader('Content-Disposition','attachment; filename="bugflow-project-tickets.csv"');return send(rows.length?[Object.keys(rows[0]).map(cell).join(','),...rows.map(r=>Object.values(r).map(cell).join(','))].join('\r\n'):'',200,'text/csv')}
    if(req.method==='POST'&&path==='/api/bugs'){
+    projects.validateBug(d,user);
     const before=d.id?store.data().bugs.find(b=>b.id===d.id):null;
     const result=store.save({...d,actor_id:user.id});const bug=store.data().bugs.find(b=>b.id===result.id);
     if(!before||before.status!==bug.status||before.assignee_id!==bug.assignee_id){for(const id of new Set([bug.assignee_id,bug.reporter_id])){const recipient=accounts.profile(id);if(recipient?.verified&&recipient.notifications)gmail.queue(recipient.email,`BugFlow BUG-${bug.id}: ${bug.status}`,`Ticket: ${bug.title}\nStatus: ${bug.status}\nUpdated by: ${user.name}\n\nOpen the workspace: ${config.origin}`)}void deliver()}
     return send(result,201);
    }
-   if(req.method==='POST'&&path==='/api/projects')return send(store.project(d),201);
-   if(req.method==='POST'&&path==='/api/modules')return send(store.module(d),201);
+   if(req.method==='POST'&&path==='/api/projects')return send(projects.create(d,user),201);
+   if(req.method==='POST'&&path==='/api/modules')return send(projects.module(d,user),201);
    return send({error:'Not found'},404);
   }catch(e){
    if(path==='/api/auth/google/callback'){res.writeHead(302,{Location:'/?auth_error='+encodeURIComponent(e.message)});res.end();return}

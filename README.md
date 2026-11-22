@@ -56,3 +56,19 @@ Run `npm test` for all 28 automated checks. Google responses are mocked in tests
 
 The current suite has 30 tests, including SMTP delivery and failure handling with a mocked transport. After `npm run build`, run `npm run test:http` for a real HTTP registration → verification → login check with a disposable database and no real email sending. That test requires local socket access.
 
+
+## Assigned project workspace
+
+After sign-in, Your projects shows only assigned project cards. Select a card to open that project's dashboard, ticket board, register and reports. My projects returns to the cards. There is no all-project dashboard selector.
+
+Create a project from the Create a project card and choose its members. The creator becomes project owner and is assigned automatically. Use Manage project on a card to add modules or change assignments; members without management rights can view the project's modules and team. Module and project creation are no longer global navigation pages. Ticket assignees must belong to the project. Reassign a member's tickets before removing them.
+
+Click the avatar or user name to open My projects, My account & team, and Sign out. Escape and outside clicks close the menu; arrow keys navigate its actions.
+
+The first upgrade adds a project_members table and infers existing assignments from managers, ticket reporters and assignees. Later new accounts start with no projects until assigned or until they create a project. Changes affect project data returned by the API, including exports, not just the cards. The current suite has 39 passing tests; the production build and real HTTP registration/login check also pass. Dockerfile includes the new project service.
+
+## Verified system administrator
+
+Run `npm run create-admin` to create the default verified system administrator at admin@bugflow.local. A random password is generated and printed only when creating the account; only its salted hash is stored. The command is idempotent and preserves existing administrator credentials. This privileged account uses the Manager role and is automatically assigned to existing and future projects. Its role and project access cannot be removed through ordinary management forms. Notifications are initially off because the default address is a local login identifier rather than a real mailbox.
+
+Optional server-side variables BUGFLOW_ADMIN_EMAIL, BUGFLOW_ADMIN_NAME and BUGFLOW_ADMIN_PASSWORD customise initial creation. The command refuses to replace an ordinary registered account with the same email. Do not commit real credentials. Inside a running Docker deployment, use `docker compose exec app npm run create-admin`; accounts belong to that container's persistent database, separate from a local installation unless the same data was migrated.

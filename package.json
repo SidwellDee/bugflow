@@ -8,13 +8,16 @@
     "build": "vite build",
     "start": "node server.js --production",
     "test": "node --test tests/*.test.js",
-    "test:http": "node --test tests-http/*.test.js"
+    "test:http": "node --test tests-http/*.test.js",
+    "create-admin": "node scripts/create-admin.js"
   },
   "dependencies": {
     "google-auth-library": "^11.3.4",
     "nodemailer": "^10.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
+    "react-is": "^19.3.1",
+    "recharts": "^3.11.0",
     "vite": "^6.1.0"
   },
   "engines": {

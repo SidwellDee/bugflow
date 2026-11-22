@@ -7,7 +7,8 @@ COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
 
 FROM dependencies AS test
-COPY accounts.js application.js gmail.js security.js store.js workflow.js ./
+COPY accounts.js application.js gmail.js security.js store.js workflow.js projects.js bootstrap-admin.js ./
+COPY src/report-data.js src/bug-register-data.js ./src/
 COPY tests ./tests
 RUN npm test
 
@@ -29,7 +30,8 @@ ENV NODE_ENV=production \
 WORKDIR /app
 COPY --from=production-dependencies --chown=node:node /app/node_modules ./node_modules
 COPY --from=build --chown=node:node /app/dist ./dist
-COPY --chown=node:node package.json server.js accounts.js application.js gmail.js security.js store.js workflow.js healthcheck.js ./
+COPY --chown=node:node package.json server.js accounts.js application.js gmail.js security.js store.js workflow.js projects.js bootstrap-admin.js healthcheck.js ./
+COPY --chown=node:node scripts/create-admin.js ./scripts/create-admin.js
 # Persist the automatically generated mail encryption key beside the database.
 RUN mkdir -p /data/.local && chown -R node:node /data \
     && ln -s /data/.local /app/.local

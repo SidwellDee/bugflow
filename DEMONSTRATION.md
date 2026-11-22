@@ -25,3 +25,13 @@ On Dashboard, sign in with the registered manager account and drag a Reported ti
 ## Account and Gmail demonstration
 
 The demo identity selector has been replaced by authenticated accounts. Use GOOGLE_SETUP.md to configure the Google client, register the first manager, connect Gmail, verify a second password account and exercise Google sign-in. Show Team & Gmail, ticket notifications and opt-out. Use separate browser sessions for separate identities. Seeded users can receive assignments but cannot sign in or receive email because no account or email address is associated with them. No live email delivery is claimed by the automated test results.
+
+## Assigned project and user menu walkthrough
+
+1. Sign in with a verified account and confirm Your projects is the landing page.
+2. Select Create a project, enter a name and description, and assign a second team member. Confirm the project's dashboard opens immediately.
+3. Return with My projects. On the card select Manage project, add a module and review Members. Confirm there is no Projects & modules item in the dashboard navigation.
+4. Sign in as the assigned member in another session. Confirm their project card opens only that project's board. An unrelated account should not receive that card or its data.
+5. Create a ticket, assign a project member and move it between statuses. Open its Details and Change history tabs.
+6. Open Reports and export the current project. Confirm unrelated project tickets are absent.
+7. Click the signed-in user's name or avatar. Confirm Sign out is inside the menu. Verify outside-click dismissal, Escape and keyboard navigation.
