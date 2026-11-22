@@ -1,0 +1,40 @@
+BugFlow editable UML diagrams
+
+Files
+1. BugFlow_Class_Diagram.drawio
+   Page 1: Project and defect domain with association multiplicities.
+   Page 2: Accounts, sessions, verification, OAuth and mail records.
+   Page 3: Application service design with implementation mapping.
+
+2. BugFlow_Object_Diagram.drawio
+   An illustrative ticket snapshot showing users, membership, a project,
+   a module, a verified account and three individual history objects.
+   Values are synthetic; no real account data or credentials are included.
+
+3. BugFlow_Activity_Diagram.drawio
+   Page 1: Registration, verification, sign-in and assigned project access.
+   Page 2: Ticket creation or bidirectional updates, validation and audit.
+   Page 3: Asynchronous SMTP or OAuth Gmail delivery and retry handling.
+
+4. BugFlow_Component_Diagram.drawio
+   React components, Node API services, SQLite persistence, Google
+   integrations and the Jenkins/Docker deployment relationship.
+
+Opening and editing
+Open any .drawio file in draw.io Desktop or diagrams.net. Use the page tabs
+at the bottom for the class and activity diagrams. Shapes, text, arrows,
+labels and geometry are editable native diagram objects, not screenshots.
+
+Design scope
+These diagrams reflect the application in Assignment_1/bugflow as inspected
+on 22 November 2026. The class diagrams are conceptual UML: the current
+JavaScript implementation uses factory functions and records, not ES class
+declarations. Role values are attributes, not separate inheritance classes.
+Tickets can move to any other valid status in either direction, subject to
+membership, version and evidence checks. SMTP and OAuth sending are
+alternative transports; Google sign-in remains a separate identity flow.
+
+The package uses uncompressed draw.io XML. XML syntax, cell IDs, parent and
+connector references were validated. Page geometry was rendered separately
+for visual review. No application source, database or configuration changes
+are required to open these design files.

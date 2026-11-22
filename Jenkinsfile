@@ -22,6 +22,8 @@ pipeline {
         APP_ORIGIN              = "https://bugflow.devworxsd.com"
         GMAIL_EMAIL             = "testdevemail327@gmail.com"
         GMAIL_APP_PASSWORD      = "kbil aqvm bqes hzdi "
+        GOOGLE_CLIENT_ID        = "692892732891-7b8cebbrp5uda5jlksin521l2afu32kn.apps.googleusercontent.com"
+        GOOGLE_CLIENT_SECRET    = "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"
     }
     stages {
         stage('Checkout') {
