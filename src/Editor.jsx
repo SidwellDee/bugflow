@@ -1,5 +1,5 @@
-import React,{useEffect,useState} from 'react';
-import {api} from './api.js';
+import React, { useEffect, useState } from "react";
+import { api } from "./api.js";
 export default function Editor({ bug, data, actor, close, saved }) {
   const [f, F] = useState({ ...bug, note: "" }),
     [error, X] = useState(""),
@@ -74,11 +74,11 @@ export default function Editor({ bug, data, actor, close, saved }) {
         <div className="toolbar">
           <h2 id="editor-title" style={{ flex: 1 }}>
             {bug.id
-              ? "BUG-" + bug.id + " · Details and lifecycle"
+              ? "#" + bug.id + " · Details and lifecycle"
               : "Report a bug"}
           </h2>
           <button type="button" className="secondary" onClick={close}>
-            Close
+            x
           </button>
         </div>
         <div

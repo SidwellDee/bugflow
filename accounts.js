@@ -1,27 +1,213 @@
-import {token,digest,email,hashPassword,checkPassword} from './security.js';
-export function createAccounts(db){
- db.exec(`CREATE TABLE IF NOT EXISTS accounts(user_id INTEGER PRIMARY KEY REFERENCES users(id),email TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT,google_sub TEXT UNIQUE,verified INTEGER NOT NULL DEFAULT 0,notifications INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL);
+import {
+  token,
+  digest,
+  email,
+  hashPassword,
+  checkPassword,
+} from "./security.js";
+export function createAccounts(db) {
+  db.exec(`CREATE TABLE IF NOT EXISTS accounts(user_id INTEGER PRIMARY KEY REFERENCES users(id),email TEXT NOT NULL UNIQUE COLLATE NOCASE,password_hash TEXT,google_sub TEXT UNIQUE,verified INTEGER NOT NULL DEFAULT 0,notifications INTEGER NOT NULL DEFAULT 1,created_at TEXT NOT NULL);
  CREATE TABLE IF NOT EXISTS sessions(hash TEXT PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id),expires INTEGER NOT NULL);
  CREATE TABLE IF NOT EXISTS verification_tokens(hash TEXT PRIMARY KEY,user_id INTEGER NOT NULL REFERENCES users(id),expires INTEGER NOT NULL);
  CREATE TABLE IF NOT EXISTS oauth_flows(hash TEXT PRIMARY KEY,purpose TEXT NOT NULL,user_id INTEGER,verifier TEXT NOT NULL,nonce TEXT NOT NULL,expires INTEGER NOT NULL);`);
- db.exec('CREATE TABLE IF NOT EXISTS system_administrators(user_id INTEGER PRIMARY KEY REFERENCES users(id))');
- const get=(sql,...p)=>db.prepare(sql).get(...p),run=(sql,...p)=>db.prepare(sql).run(...p);
- const profile=id=>get('SELECT u.id,u.name,u.role,a.email,a.verified,a.notifications,a.google_sub IS NOT NULL google_connected,EXISTS(SELECT 1 FROM system_administrators s WHERE s.user_id=u.id) is_superuser FROM users u JOIN accounts a ON a.user_id=u.id WHERE u.id=?',id);
- function tx(fn){db.exec('BEGIN IMMEDIATE');try{const r=fn();db.exec('COMMIT');return r}catch(e){db.exec('ROLLBACK');throw e}}
- function create(name,address,role,password,sub=null,verified=0){if(typeof name!=='string'||!name.trim()||name.length>100)throw Error('Name is required and must be at most 100 characters');if(!['Tester','Developer'].includes(role))throw Error('Choose Tester or Developer as your role');return tx(()=>{if(get('SELECT user_id FROM accounts WHERE email=?',address))throw Error('An account with this email already exists');const first=!get('SELECT user_id FROM accounts LIMIT 1');const id=Number(run('INSERT INTO users(name,role) VALUES(?,?)',name.trim(),first?'Manager':role).lastInsertRowid);run('INSERT INTO accounts(user_id,email,password_hash,google_sub,verified,created_at) VALUES(?,?,?,?,?,?)',id,address,password,sub,verified,new Date().toISOString());return profile(id)})}
- return {profile,
- async register(d){const address=email(d.email);const hash=await hashPassword(d.password);return create(d.name,address,d.role||'Tester',hash)},
- async login(d){const address=email(d.email);const a=get('SELECT * FROM accounts WHERE email=?',address);const valid=await checkPassword(d.password,a?.password_hash||('00000000000000000000000000000000:'+ '0'.repeat(128)));if(!a||!valid)throw Error('Incorrect email or password');return profile(a.user_id)},
- google(claims){if(!claims.sub||!claims.email_verified)throw Error('Google email must be verified');const address=email(claims.email),existing=get('SELECT * FROM accounts WHERE google_sub=?',claims.sub);if(existing)return profile(existing.user_id);if(get('SELECT user_id FROM accounts WHERE email=?',address))throw Error('This email already has a password account. Sign in with your password; automatic account linking is disabled.');return create(claims.name||address.split('@')[0],address,'Tester',null,claims.sub,1)},
- session(id){const value=token();run('DELETE FROM sessions WHERE expires<?',Date.now());run('INSERT INTO sessions VALUES(?,?,?)',digest(value),id,Date.now()+7*86400000);return value},
- current(value){if(!value)return null;const s=get('SELECT user_id FROM sessions WHERE hash=? AND expires>?',digest(value),Date.now());return s?profile(s.user_id):null},
- logout(value){if(value)run('DELETE FROM sessions WHERE hash=?',digest(value))},
- verification(id){const value=token();run('DELETE FROM verification_tokens WHERE user_id=?',id);run('INSERT INTO verification_tokens VALUES(?,?,?)',digest(value),id,Date.now()+86400000);return value},
- verify(value){return tx(()=>{const entry=get('SELECT * FROM verification_tokens WHERE hash=? AND expires>?',digest(value||''),Date.now());if(!entry)throw Error('Verification link is invalid or expired');run('UPDATE accounts SET verified=1 WHERE user_id=?',entry.user_id);run('DELETE FROM verification_tokens WHERE user_id=?',entry.user_id);return profile(entry.user_id)})},
- preference(id,value){if(typeof value!=='boolean')throw Error('Invalid notification preference');run('UPDATE accounts SET notifications=? WHERE user_id=?',value?1:0,id);return profile(id)},
- list(){return db.prepare('SELECT u.id,u.name,u.role,a.email,a.verified,a.notifications,a.google_sub IS NOT NULL google_connected FROM users u LEFT JOIN accounts a ON a.user_id=u.id ORDER BY u.id').all()},
- role(id,role,actor){if(!['Manager','Tester','Developer'].includes(role))throw Error('Invalid role');if(id===actor)throw Error('You cannot change your own role');if(role!=='Manager'&&get('SELECT user_id FROM system_administrators WHERE user_id=?',id))throw Error('A system administrator must retain the Manager role');if(!profile(id))throw Error('Choose a registered account');if(role==='Tester'&&get('SELECT id FROM bugs WHERE assignee_id=? LIMIT 1',id))throw Error('Reassign this member’s tickets before changing their role to Tester');run('UPDATE users SET role=? WHERE id=?',role,id)},
- flow(purpose,userId=null){const state=token(),verifier=token(),nonce=token();run('DELETE FROM oauth_flows WHERE expires<?',Date.now());run('INSERT INTO oauth_flows VALUES(?,?,?,?,?,?)',digest(state),purpose,userId,verifier,nonce,Date.now()+600000);return {state,verifier,nonce}},
- consumeFlow(state,cookie){if(!state||state!==cookie)throw Error('Google connection request is invalid. Please try again.');return tx(()=>{const flow=get('SELECT * FROM oauth_flows WHERE hash=? AND expires>?',digest(state),Date.now());if(!flow)throw Error('Google connection request expired');run('DELETE FROM oauth_flows WHERE hash=?',digest(state));return flow})}
- };
+  db.exec(
+    "CREATE TABLE IF NOT EXISTS system_administrators(user_id INTEGER PRIMARY KEY REFERENCES users(id))",
+  );
+  const get = (sql, ...p) => db.prepare(sql).get(...p),
+    run = (sql, ...p) => db.prepare(sql).run(...p);
+  const profile = (id) =>
+    get(
+      "SELECT u.id,u.name,u.role,a.email,a.verified,a.notifications,a.google_sub IS NOT NULL google_connected,EXISTS(SELECT 1 FROM system_administrators s WHERE s.user_id=u.id) is_superuser FROM users u JOIN accounts a ON a.user_id=u.id WHERE u.id=?",
+      id,
+    );
+  function tx(fn) {
+    db.exec("BEGIN IMMEDIATE");
+    try {
+      const r = fn();
+      db.exec("COMMIT");
+      return r;
+    } catch (e) {
+      db.exec("ROLLBACK");
+      throw e;
+    }
+  }
+  function create(name, address, role, password, sub = null, verified = 0) {
+    if (typeof name !== "string" || !name.trim() || name.length > 100)
+      throw Error("Name is required and must be at most 100 characters");
+    if (!["Tester", "Developer"].includes(role))
+      throw Error("Choose Tester or Developer as your role");
+    return tx(() => {
+      if (get("SELECT user_id FROM accounts WHERE email=?", address))
+        throw Error("An account with this email already exists");
+      const first = !get("SELECT user_id FROM accounts LIMIT 1");
+      const id = Number(
+        run(
+          "INSERT INTO users(name,role) VALUES(?,?)",
+          name.trim(),
+          first ? "Manager" : role,
+        ).lastInsertRowid,
+      );
+      run(
+        "INSERT INTO accounts(user_id,email,password_hash,google_sub,verified,created_at) VALUES(?,?,?,?,?,?)",
+        id,
+        address,
+        password,
+        sub,
+        verified,
+        new Date().toISOString(),
+      );
+      return profile(id);
+    });
+  }
+  return {
+    profile,
+    async register(d) {
+      const address = email(d.email);
+      const hash = await hashPassword(d.password);
+      return create(d.name, address, d.role || "Tester", hash);
+    },
+    async login(d) {
+      const address = email(d.email);
+      const a = get("SELECT * FROM accounts WHERE email=?", address);
+      const valid = await checkPassword(
+        d.password,
+        a?.password_hash ||
+          "00000000000000000000000000000000:" + "0".repeat(128),
+      );
+      if (!a || !valid) throw Error("Incorrect email or password");
+      return profile(a.user_id);
+    },
+    google(claims) {
+      if (!claims.sub || !claims.email_verified)
+        throw Error("Google email must be verified");
+      const address = email(claims.email),
+        existing = get("SELECT * FROM accounts WHERE google_sub=?", claims.sub);
+      if (existing) return profile(existing.user_id);
+      if (get("SELECT user_id FROM accounts WHERE email=?", address))
+        throw Error(
+          "This email already has a password account. Sign in with your password; automatic account linking is disabled.",
+        );
+      return create(
+        claims.name || address.split("@")[0],
+        address,
+        "Tester",
+        null,
+        claims.sub,
+        1,
+      );
+    },
+    session(id) {
+      const value = token();
+      run("DELETE FROM sessions WHERE expires<?", Date.now());
+      run(
+        "INSERT INTO sessions VALUES(?,?,?)",
+        digest(value),
+        id,
+        Date.now() + 7 * 86400000,
+      );
+      return value;
+    },
+    current(value) {
+      if (!value) return null;
+      const s = get(
+        "SELECT user_id FROM sessions WHERE hash=? AND expires>?",
+        digest(value),
+        Date.now(),
+      );
+      return s ? profile(s.user_id) : null;
+    },
+    logout(value) {
+      if (value) run("DELETE FROM sessions WHERE hash=?", digest(value));
+    },
+    verification(id) {
+      const value = token();
+      run("DELETE FROM verification_tokens WHERE user_id=?", id);
+      run(
+        "INSERT INTO verification_tokens VALUES(?,?,?)",
+        digest(value),
+        id,
+        Date.now() + 86400000,
+      );
+      return value;
+    },
+    verify(value) {
+      return tx(() => {
+        const entry = get(
+          "SELECT * FROM verification_tokens WHERE hash=? AND expires>?",
+          digest(value || ""),
+          Date.now(),
+        );
+        if (!entry) throw Error("Verification link is invalid or expired");
+        run("UPDATE accounts SET verified=1 WHERE user_id=?", entry.user_id);
+        run("DELETE FROM verification_tokens WHERE user_id=?", entry.user_id);
+        return profile(entry.user_id);
+      });
+    },
+    preference(id, value) {
+      if (typeof value !== "boolean")
+        throw Error("Invalid notification preference");
+      run(
+        "UPDATE accounts SET notifications=? WHERE user_id=?",
+        value ? 1 : 0,
+        id,
+      );
+      return profile(id);
+    },
+    list() {
+      return db
+        .prepare(
+          "SELECT u.id,u.name,u.role,a.email,a.verified,a.notifications,a.google_sub IS NOT NULL google_connected FROM users u LEFT JOIN accounts a ON a.user_id=u.id ORDER BY u.id",
+        )
+        .all();
+    },
+    role(id, role, actor) {
+      if (!["Manager", "Tester", "Developer"].includes(role))
+        throw Error("Invalid role");
+      if (id === actor) throw Error("You cannot change your own role");
+      if (
+        role !== "Manager" &&
+        get("SELECT user_id FROM system_administrators WHERE user_id=?", id)
+      )
+        throw Error("A system administrator must retain the Manager role");
+      if (!profile(id)) throw Error("Choose a registered account");
+      if (
+        role === "Tester" &&
+        get("SELECT id FROM bugs WHERE assignee_id=? LIMIT 1", id)
+      )
+        throw Error(
+          "Reassign this member’s tickets before changing their role to Tester",
+        );
+      run("UPDATE users SET role=? WHERE id=?", role, id);
+    },
+    flow(purpose, userId = null) {
+      const state = token(),
+        verifier = token(),
+        nonce = token();
+      run("DELETE FROM oauth_flows WHERE expires<?", Date.now());
+      run(
+        "INSERT INTO oauth_flows VALUES(?,?,?,?,?,?)",
+        digest(state),
+        purpose,
+        userId,
+        verifier,
+        nonce,
+        Date.now() + 600000,
+      );
+      return { state, verifier, nonce };
+    },
+    consumeFlow(state, cookie) {
+      if (!state || state !== cookie)
+        throw Error("Google connection request is invalid. Please try again.");
+      return tx(() => {
+        const flow = get(
+          "SELECT * FROM oauth_flows WHERE hash=? AND expires>?",
+          digest(state),
+          Date.now(),
+        );
+        if (!flow) throw Error("Google connection request expired");
+        run("DELETE FROM oauth_flows WHERE hash=?", digest(state));
+        return flow;
+      });
+    },
+  };
 }
