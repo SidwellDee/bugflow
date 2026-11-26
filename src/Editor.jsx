@@ -1,3 +1,4 @@
+import Icon from "./Icon.jsx";
 import React, { useEffect, useState } from "react";
 import { api } from "./api.js";
 export default function Editor({ bug, data, actor, close, saved }) {
@@ -77,8 +78,8 @@ export default function Editor({ bug, data, actor, close, saved }) {
               ? "#" + bug.id + " · Details and lifecycle"
               : "Report a bug"}
           </h2>
-          <button type="button" className="secondary" onClick={close}>
-            x
+          <button type="button" className="secondary" onClick={close} aria-label="Close ticket">
+            <Icon name="close" />
           </button>
         </div>
         <div
@@ -110,7 +111,7 @@ export default function Editor({ bug, data, actor, close, saved }) {
             tabIndex={tab === "details" ? 0 : -1}
             onClick={() => setTab("details")}
           >
-            Details
+            <Icon name="edit" /> Details
           </button>
           <button
             type="button"
@@ -121,7 +122,7 @@ export default function Editor({ bug, data, actor, close, saved }) {
             tabIndex={tab === "history" ? 0 : -1}
             onClick={() => setTab("history")}
           >
-            Change history <span className="total-pill">{history.length}</span>
+            <Icon name="history" /> Change history <span className="total-pill">{history.length}</span>
           </button>
         </div>
         <div
@@ -192,7 +193,7 @@ export default function Editor({ bug, data, actor, close, saved }) {
             <p role="alert" className="error">
               {error}
             </p>
-            <button disabled={saving}>{saving ? "Saving…" : "Save bug"}</button>
+            <button disabled={saving}><Icon name="save" /> {saving ? "Saving…" : "Save bug"}</button>
           </form>
         </div>
         <div

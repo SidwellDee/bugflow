@@ -1,3 +1,5 @@
+import BrandContent from "./BrandContent.jsx";
+import Icon from "./Icon.jsx";
 import React, { useEffect, useState } from "react";
 async function api(path, body) {
   const response = await fetch(
@@ -10,9 +12,9 @@ async function api(path, body) {
         }
       : {},
   );
-  if(response.status===404&&path.startsWith('auth/'))throw Error('The running server does not have the account service. Restart BugFlow with npm run dev (or rebuild and restart its Docker container), then refresh this page.');
+  if(response.status===404&&path.startsWith('auth/'))throw Error('The running server does not have the account service. Restart Bug Tracker with npm run dev (or rebuild and restart its Docker container), then refresh this page.');
   const type=response.headers.get('content-type')||'';
-  if(!type.includes('application/json'))throw Error('BugFlow could not reach its account API. Open the application through its Node.js server, not a standalone preview.');
+  if(!type.includes('application/json'))throw Error('Bug Tracker could not reach its account API. Open the application through its Node.js server, not a standalone preview.');
   const result = await response.json();
   if (!response.ok) throw Error(result.error);
   return result;
@@ -20,10 +22,7 @@ async function api(path, body) {
 function Brand() {
   return (
     <a className="brand" href="/">
-      <span className="brand-mark">b</span>
-      <strong>
-        bugflow<span>.</span>
-      </strong>
+      <BrandContent />
     </a>
   );
 }
@@ -151,7 +150,7 @@ export function AccountGate({ children }) {
         <h1>{mode === "login" ? "Welcome back" : "Create your account"}</h1>
         <p>
           {mode === "login"
-            ? "Sign in to your BugFlow workspace."
+            ? "Sign in to your Bug Tracker workspace."
             : "Join your team and keep every issue moving."}
         </p>
         <form
@@ -253,7 +252,7 @@ export function AccountGate({ children }) {
         </div>
         {session?.googleConfigured ? (
           <a className="button google-button" href="/api/auth/google">
-            <span aria-hidden="true">G</span> Continue with Google
+            <Icon name="google" /> Continue with Google
           </a>
         ) : (
           <>
@@ -266,7 +265,7 @@ export function AccountGate({ children }) {
           </>
         )}
         <p className="auth-switch">
-          {mode === "login" ? "New to BugFlow?" : "Already have an account?"}{" "}
+          {mode === "login" ? "New to Bug Tracker?" : "Already have an account?"}{" "}
           <button
             type="button"
             onClick={() => {
@@ -350,7 +349,7 @@ export function GmailSettings({ user }) {
                 disabled={busy || !user.verified}
                 onClick={() => action("test")}
               >
-                Send me a test email
+                <Icon name="mail" /> Send me a test email
               </button>
               {state?.transport!=='smtp'&&<button
                 className="secondary"
@@ -381,7 +380,7 @@ export function GmailSettings({ user }) {
         </p>
       )}
       <button className="secondary" disabled={busy} onClick={load}>
-        Refresh connection status
+        <Icon name="refresh" /> Refresh connection status
       </button>
     </div>
   );

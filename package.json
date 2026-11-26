@@ -1,5 +1,5 @@
 {
-  "name": "bugflow",
+  "name": "bug-tracker",
   "version": "2.0.0",
   "private": true,
   "type": "module",
@@ -12,6 +12,9 @@
     "create-admin": "node scripts/create-admin.js"
   },
   "dependencies": {
+    "@fortawesome/free-brands-svg-icons": "^7.3.1",
+    "@fortawesome/free-solid-svg-icons": "^7.3.1",
+    "@fortawesome/react-fontawesome": "^3.5.0",
     "google-auth-library": "^11.3.4",
     "nodemailer": "^10.5.0",
     "react": "^19.0.0",

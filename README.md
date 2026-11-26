@@ -1,4 +1,4 @@
-# BugFlow
+# Bug Tracker
 
 A React and Node.js bug tracking prototype for CSC 601 Advanced Software Engineering.
 

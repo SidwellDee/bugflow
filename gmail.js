@@ -110,7 +110,7 @@ export function createGmail(db, config, vault, fetcher = fetch, smtpTransport) {
           try {
             if (smtp) {
               const result = await smtp.sendMail({
-                from: { name: "BugFlow", address: config.smtpUser },
+                from: { name: "Bug Tracker", address: config.smtpUser },
                 to: message.recipient,
                 subject: message.subject,
                 text: vault.open(message.body),

@@ -54,8 +54,8 @@ export function createApplication(store, config, dependencies = {}) {
     const value = accounts.verification(user.id);
     gmail.queue(
       user.email,
-      "Verify your BugFlow email",
-      `Hello ${user.name},\n\nVerify your email to access BugFlow:\n${config.origin}/api/auth/verify?token=${value}\n\nThis link expires in 24 hours. If you did not register, ignore this message.`,
+      "Verify your Bug Tracker email",
+      `Hello ${user.name},\n\nVerify your email to access Bug Tracker:\n${config.origin}/api/auth/verify?token=${value}\n\nThis link expires in 24 hours. If you did not register, ignore this message.`,
     );
     void deliver();
   }
@@ -286,8 +286,8 @@ export function createApplication(store, config, dependencies = {}) {
             rate(req, "test", 5);
             gmail.queue(
               user.email,
-              "BugFlow Gmail connection test",
-              "Your BugFlow workspace can send email through Gmail.",
+              "Bug Tracker Gmail connection test",
+              "Your Bug Tracker workspace can send email through Gmail.",
             );
             void deliver();
             return send({
@@ -339,7 +339,7 @@ export function createApplication(store, config, dependencies = {}) {
               '"';
           res.setHeader(
             "Content-Disposition",
-            'attachment; filename="bugflow-project-tickets.csv"',
+            'attachment; filename="bug-tracker-project-tickets.csv"',
           );
           return send(
             rows.length
@@ -369,7 +369,7 @@ export function createApplication(store, config, dependencies = {}) {
               if (recipient?.verified && recipient.notifications)
                 gmail.queue(
                   recipient.email,
-                  `BugFlow BUG-${bug.id}: ${bug.status}`,
+                  `Bug Tracker BUG-${bug.id}: ${bug.status}`,
                   `Ticket: ${bug.title}\nStatus: ${bug.status}\nUpdated by: ${user.name}\n\nOpen the workspace: ${config.origin}`,
                 );
             }

@@ -1,3 +1,4 @@
+import Icon from "./Icon.jsx";
 import React,{useMemo,useState} from 'react';
 import {ResponsiveContainer,PieChart,Pie,Cell,BarChart,Bar,AreaChart,Area,XAxis,YAxis,CartesianGrid,Tooltip,Legend} from 'recharts';
 import {buildReportData} from './report-data.js';
@@ -16,7 +17,7 @@ function DataTable({caption,rows,columns}){
 function Panel({title,description,className='',children}){
  return <section className={'report-panel '+className}><div className="report-panel-heading"><h2>{title}</h2><p>{description}</p></div>{children}</section>;
 }
-function Empty({children='Create your first ticket to see this chart.'}){return <div className="report-chart-empty"><span aria-hidden="true">▥</span><p>{children}</p></div>}
+function Empty({children='Create your first ticket to see this chart.'}){return <div className="report-chart-empty"><span aria-hidden="true"><Icon name="chart" /></span><p>{children}</p></div>}
 function SmallSeries({rows}){return <div className="status-chart-key">{rows.map((row,index)=><div key={row.name}><span className="series-swatch" style={{background:statusColors[index]}}/><span>{row.name}</span><strong>{row.value}</strong></div>)}</div>}
 
 export default function Reports({project,data}){
@@ -26,7 +27,7 @@ export default function Reports({project,data}){
  const workloadHeight=Math.max(260,report.workload.length*42+70);
  const modulesHeight=Math.max(260,report.modules.length*42+65);
  return <div className="project-reports">
-  <div className="toolbar report-page-heading"><div><h2>Project analytics</h2><p>Understand ticket flow, spot hotspots and balance your team’s work.</p></div><a className="button" href={'/api/export?project_id='+project.id} download>↓ Export project CSV</a></div>
+  <div className="toolbar report-page-heading"><div><h2>Project analytics</h2><p>Understand ticket flow, spot hotspots and balance your team’s work.</p></div><a className="button" href={'/api/export?project_id='+project.id} download><Icon name="download" /> Export project CSV</a></div>
   <div className="report-scope-note"><span className="report-scope-dot"/>Current snapshot · {project.name} · {report.total} tickets</div>
   <div className="reports-grid">
    <Panel title="Lifecycle overview" description="Where tickets stand right now. Hover over a segment for its share.">

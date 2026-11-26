@@ -1,6 +1,6 @@
 # Google sign in and Gmail setup
 
-BugFlow now supports password registration, verified email, Google sign-in and Gmail notifications. These features use your own Google Cloud OAuth application. No Google credentials are bundled, and no real email has been sent during automated testing.
+Bug Tracker now supports password registration, verified email, Google sign-in and Gmail notifications. These features use your own Google Cloud OAuth application. No Google credentials are bundled, and no real email has been sent during automated testing.
 
 For email/password-based Gmail SMTP sending instead, follow SMTP_SETUP.md. Google OAuth setup below is only needed for Google sign-in or the OAuth Gmail sender option. SMTP takes priority when GMAIL_EMAIL and GMAIL_APP_PASSWORD are set on the server.
 
@@ -9,7 +9,7 @@ For email/password-based Gmail SMTP sending instead, follow SMTP_SETUP.md. Googl
 1. Create or select a project in the [Google Cloud console](https://console.cloud.google.com/).
 2. Enable the Gmail API for that project.
 3. Configure Google Auth Platform branding, audience and data access. For a coursework demonstration, use a testing audience and add the Google accounts you will use as test users. Public release may need Google review because `gmail.send` is a sensitive scope; see [Google's scope classifications](https://developers.google.com/workspace/gmail/api/auth/scopes) and [verification guidance](https://developers.google.com/identity/protocols/oauth2/production-readiness/sensitive-scope-verification).
-4. Add the scopes `openid`, `email`, `profile` and `https://www.googleapis.com/auth/gmail.send`. Ordinary sign-in requests only identity scopes; Gmail send access is requested separately when a manager connects a sender. BugFlow does not request inbox-reading permission.
+4. Add the scopes `openid`, `email`, `profile` and `https://www.googleapis.com/auth/gmail.send`. Ordinary sign-in requests only identity scopes; Gmail send access is requested separately when a manager connects a sender. Bug Tracker does not request inbox-reading permission.
 5. Create an OAuth client of type Web application. Register this exact authorised redirect URI:
 
    `http://127.0.0.1:3000/api/auth/google/callback`
@@ -40,9 +40,9 @@ Google sign-in does not automatically take over an existing password account wit
 
 ## Gmail delivery
 
-Only a manager can connect, reconnect or disconnect the workspace sender. Google opens its own consent screen; BugFlow never asks for your Gmail password. The connection requests offline access so the server can refresh tokens for delivery, following [Google's OAuth flow](https://developers.google.com/identity/protocols/oauth2/web-server).
+Only a manager can connect, reconnect or disconnect the workspace sender. Google opens its own consent screen; Bug Tracker never asks for your Gmail password. The connection requests offline access so the server can refresh tokens for delivery, following [Google's OAuth flow](https://developers.google.com/identity/protocols/oauth2/web-server).
 
-BugFlow encodes plain-text MIME messages as base64url and calls Gmail's messages.send endpoint as described in [Google's sending guide](https://developers.google.com/workspace/gmail/api/guides/sending). It sends:
+Bug Tracker encodes plain-text MIME messages as base64url and calls Gmail's messages.send endpoint as described in [Google's sending guide](https://developers.google.com/workspace/gmail/api/guides/sending). It sends:
 
 - Registration verification links.
 - Ticket creation, assignment and status-change messages to verified, opted-in reporters and current assignees. Duplicate recipients are removed.

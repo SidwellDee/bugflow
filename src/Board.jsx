@@ -1,3 +1,4 @@
+import Icon from "./Icon.jsx";
 import React, { useState } from "react";
 import { canMove } from "../workflow.js";
 
@@ -170,7 +171,7 @@ export default function Board({ bugs, data, actor, onOpen, onMove }) {
                       </span>
                     </div>
                     <label className="ticket-move">
-                      Move to
+                      <Icon name="move" /> Move to
                       <select
                         aria-label={`Move BUG-${bug.id} to status`}
                         value=""
@@ -189,7 +190,7 @@ export default function Board({ bugs, data, actor, onOpen, onMove }) {
                 ))}
                 {!tickets.length && (
                   <div className="empty-column">
-                    <span aria-hidden="true">⊞</span>
+                    <span aria-hidden="true"><Icon name="empty" /></span>
                     <p>Room for progress</p>
                     <small>Tickets will appear here</small>
                   </div>

@@ -1,3 +1,4 @@
+import Icon from "./Icon.jsx";
 import React, { useEffect, useState } from "react";
 import { getBugPage, pageNumbers } from "./bug-register-data.js";
 import "./bug-register.css";
@@ -72,7 +73,7 @@ export default function BugRegister({ bugs, data, onOpen, onCreate }) {
           ))}
         </select>
         <button className="register-create" onClick={onCreate}>
-          ＋ New ticket
+          <Icon name="plus" /> New ticket
         </button>
       </div>
       <div className="tablewrap">
@@ -169,7 +170,7 @@ export default function BugRegister({ bugs, data, onOpen, onCreate }) {
             disabled={result.page === 1}
             onClick={() => setPage(result.page - 1)}
           >
-            ‹ <span>Previous</span>
+            <Icon name="previous" /> <span>Previous</span>
           </button>
           {pageNumbers(result.page, result.pageCount).map((item) =>
             typeof item === "number" ? (
@@ -195,7 +196,7 @@ export default function BugRegister({ bugs, data, onOpen, onCreate }) {
             disabled={result.page === result.pageCount}
             onClick={() => setPage(result.page + 1)}
           >
-            <span>Next</span> ›
+            <span>Next</span> <Icon name="next" />
           </button>
         </nav>
       </div>

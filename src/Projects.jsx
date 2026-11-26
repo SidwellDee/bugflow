@@ -1,9 +1,10 @@
+import Icon from "./Icon.jsx";
 import React,{useEffect,useState} from 'react';
 import {api} from './api.js';
 
 function Dialog({title,close,children}){
  useEffect(()=>{const handler=event=>{if(event.key==='Escape')close()};document.addEventListener('keydown',handler);return()=>document.removeEventListener('keydown',handler)},[close]);
- return <div className="modalback"><div className="modal project-dialog" role="dialog" aria-modal="true" aria-labelledby="project-dialog-title"><div className="toolbar"><h2 id="project-dialog-title" style={{flex:1}}>{title}</h2><button className="secondary" type="button" onClick={close}>Close</button></div>{children}</div></div>;
+ return <div className="modalback"><div className="modal project-dialog" role="dialog" aria-modal="true" aria-labelledby="project-dialog-title"><div className="toolbar"><h2 id="project-dialog-title" style={{flex:1}}>{title}</h2><button className="secondary" type="button" onClick={close}><Icon name="close" /> Close</button></div>{children}</div></div>;
 }
 
 export function ProjectsHome({data,user,onOpen,onManage,onCreate}){
@@ -17,11 +18,11 @@ export function ProjectsHome({data,user,onOpen,onManage,onCreate}){
     <h2>{project.name}</h2><p className="project-description">{project.description}</p>
     <div className="project-card-stats"><span><strong>{bugs.length}</strong> tickets</span><span><strong>{data.modules.filter(module=>module.project_id===project.id).length}</strong> modules</span><span><strong>{members.length}</strong> members</span></div>
     <div className="project-progress"><span>Closed tickets</span><span>{closed} / {bugs.length}</span></div><div className="bar"><i style={{width:(bugs.length?closed/bugs.length*100:0)+'%'}}/></div>
-    <span className="project-open-label">Open dashboard <span aria-hidden="true">→</span></span>
+    <span className="project-open-label">Open dashboard <Icon name="forward" /></span>
    </button>
-   <div className="project-card-footer"><span className="muted">{members.find(member=>member.user_id===user.id)?.role==='Owner'?'Project owner':'Team member'}</span><button className="project-manage-button" onClick={()=>onManage(project)}>{project.can_manage?'Manage project':'View modules & team'}</button></div>
+   <div className="project-card-footer"><span className="muted">{members.find(member=>member.user_id===user.id)?.role==='Owner'?'Project owner':'Team member'}</span><button className="project-manage-button" onClick={()=>onManage(project)}><Icon name="settings" /> {project.can_manage?'Manage project':'View modules & team'}</button></div>
   </article>;
- })}<button className="create-project-card" onClick={onCreate}><span aria-hidden="true">＋</span><strong>Create a project</strong><small>Organise modules, assign your team<br/>and keep every issue in view.</small></button></div></>;
+ })}<button className="create-project-card" onClick={onCreate}><span aria-hidden="true"><Icon name="plus" /></span><strong>Create a project</strong><small>Organise modules, assign your team<br/>and keep every issue in view.</small></button></div></>;
 }
 
 export function CreateProject({data,user,close,onCreated}){

@@ -62,7 +62,7 @@ for (const line of [
 }
 fs.writeFileSync(
   "REPORT.html",
-  '<!doctype html><html lang="en"><meta charset="utf-8"><title>BugFlow React development report</title><style>body{max-width:900px;margin:50px auto;padding:0 30px;font:16px/1.65 Georgia;color:#202731}h1,h2,h3{font-family:Arial;color:black;line-height:1.3;break-after:avoid}h2{margin-top:36px}table{border-collapse:collapse;width:100%;font:13px/1.5 Arial;margin:22px 0}td,th{border:1px solid #d9d9d9;padding:10px;text-align:left}th{background:#19344d;color:white}tr:nth-child(even){background:#f3f6f9}tr{break-inside:avoid}pre{white-space:pre-wrap;background:#f2f4f7;padding:20px;font:13px/1.6 monospace}@media print{body{margin:0;font-size:11pt}table{font-size:9pt}@page{size:A4;margin:20mm}}</style><body>' +
+  '<!doctype html><html lang="en"><meta charset="utf-8"><title>Bug Tracker React development report</title><style>body{max-width:900px;margin:50px auto;padding:0 30px;font:16px/1.65 Georgia;color:#202731}h1,h2,h3{font-family:Arial;color:black;line-height:1.3;break-after:avoid}h2{margin-top:36px}table{border-collapse:collapse;width:100%;font:13px/1.5 Arial;margin:22px 0}td,th{border:1px solid #d9d9d9;padding:10px;text-align:left}th{background:#19344d;color:white}tr:nth-child(even){background:#f3f6f9}tr{break-inside:avoid}pre{white-space:pre-wrap;background:#f2f4f7;padding:20px;font:13px/1.6 monospace}@media print{body{margin:0;font-size:11pt}table{font-size:9pt}@page{size:A4;margin:20mm}}</style><body>' +
     out.join("") +
     "</body></html>",
 );

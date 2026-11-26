@@ -1,3 +1,5 @@
+import BrandContent from "./BrandContent.jsx";
+import Icon from "./Icon.jsx";
 import React, { useEffect, useState, lazy, Suspense } from "react";
 import Board from "./Board.jsx";
 import BugRegister from "./BugRegister.jsx";
@@ -106,16 +108,11 @@ export default function Workspace({ user, logout, onProfile }) {
             event.preventDefault();
             home();
           }}
-          aria-label="BugFlow projects"
+          aria-label="Bug Tracker projects"
         >
-          <span className="brand-mark">b</span>
-          <strong>
-            bugflow<span>.</span>
-          </strong>
+          <BrandContent />
         </a>
-        <div className="header-context">
-          Workspace <span>/</span> {project?.name || "My projects"}
-        </div>
+
         <UserMenu
           user={user}
           onProjects={home}
@@ -133,7 +130,7 @@ export default function Workspace({ user, logout, onProfile }) {
                 <p>Your profile, team and email connections.</p>
               </div>
               <button className="secondary" onClick={home}>
-                ← My projects
+                <Icon name="back" /> My projects
               </button>
             </div>
             <Team user={user} onProfile={onProfile} />
@@ -149,7 +146,7 @@ export default function Workspace({ user, logout, onProfile }) {
         ) : (
           <>
             <button className="project-back" onClick={home}>
-              ← My projects
+              <Icon name="back" /> My projects
             </button>
             <div className="page-heading">
               <div>
@@ -173,7 +170,7 @@ export default function Workspace({ user, logout, onProfile }) {
                       onClick={() => setPage(label)}
                     >
                       <span className="nav-symbol" aria-hidden="true">
-                        {["▦", "☷", "◷"][index]}
+                        <Icon name={["board", "list", "chart"][index]} />
                       </span>
                       {label}
                     </button>
@@ -196,7 +193,9 @@ export default function Workspace({ user, logout, onProfile }) {
                     </h2>
                     <p>Keep work moving, one ticket at a time.</p>
                   </div>
-                  <button onClick={report}>＋ New ticket</button>
+                  <button onClick={report}>
+                    <Icon name="plus" /> New ticket
+                  </button>
                 </div>
                 <Board
                   bugs={bugs}
@@ -237,7 +236,7 @@ export default function Workspace({ user, logout, onProfile }) {
         )}
       </main>
       <footer className="app-footer">
-        <span>BugFlow · A little clarity for every fix.</span>
+        <span>Bug Tracker · A little clarity for every fix.</span>
         <span>Signed in securely · Changes are saved locally</span>
       </footer>
       {create && (

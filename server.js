@@ -80,5 +80,5 @@ const server = http.createServer(async (req, res) => {
   }
 });
 server.listen(Number(process.env.PORT) || 3000, process.env.HOST || "127.0.0.1", () =>
-  console.log("BugFlow React: http://127.0.0.1:" + (process.env.PORT || 3000)),
+  console.log("Bug Tracker React: http://127.0.0.1:" + (process.env.PORT || 3000)),
 );
